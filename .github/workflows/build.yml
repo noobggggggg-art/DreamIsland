@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Версия из тега
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -eq "tag") { $v = "${{ github.ref_name }}".TrimStart('v') } else { $v = "0.0.0" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Сборка exe
+        run: dotnet publish DreamIsland.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }} -o publish
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DreamIsland
+          path: publish/DreamIsland.exe
+
+      - name: Публикация релиза
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: publish/DreamIsland.exe
+          generate_release_notes: true
