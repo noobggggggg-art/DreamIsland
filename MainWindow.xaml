@@ -89,7 +89,6 @@
                     <MenuItem Header="Проверить обновления" Click="UpdateCheck_Click"/>
                     <MenuItem Tag="autoupdate" Header="Автоматически проверять обновления"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
-                    <MenuItem Header="Репозиторий обновлений…" Click="UpdateRepo_Click"/>
                     <Separator/>
                     <MenuItem Header="Выход" Click="Exit_Click"/>
                 </ContextMenu>

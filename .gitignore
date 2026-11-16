@@ -1,15 +1,66 @@
-# сборка
+# ===== Сборка =====
+# локальный помощник для сборки (в репозиторий не нужен)
+publish.bat
 bin/
 obj/
 publish/
+out/
+[Dd]ebug/
+[Rr]elease/
+*.exe
+*.pdb
+*.cache
+*.nupkg
+packages/
+.nuget/
+project.lock.json
+TestResults/
 
-# Visual Studio / Rider / VS Code
+# ===== Архивы (готовые exe и zip выкладываются через Releases, не в код) =====
+*.zip
+*.rar
+*.7z
+
+# ===== Личные данные и секреты =====
+# настройки острова (там может лежать пароль OBS) и статус VPN
+settings.txt
+status.json
+# ключи, сертификаты, переменные окружения
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+*.snk
+secrets.*
+*.secret
+
+# ===== Остатки автообновления =====
+*.old
+*.part
+update/
+
+# ===== Редакторы и IDE =====
 .vs/
 .idea/
 .vscode/
 *.user
 *.suo
+*.rsuser
+*.DotSettings.user
 
-# мусор
+# ===== Логи и временные файлы =====
 *.log
+*.dmp
+*.tmp
+*.bak
+*~
+
+# ===== Мусор операционной системы =====
 Thumbs.db
+desktop.ini
+.DS_Store
+
+# ===== Если рядом окажется проект VPN =====
+node_modules/

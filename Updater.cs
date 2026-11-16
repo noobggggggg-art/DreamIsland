@@ -27,8 +27,8 @@ namespace DreamIsland
     /// </summary>
     public static class Updater
     {
-        /// <summary>Репозиторий по умолчанию. Можно поменять здесь или в меню острова («Репозиторий обновлений»).</summary>
-        public const string DefaultRepo = "YOUR_GITHUB_NAME/DreamIsland";
+        /// <summary>Репозиторий, откуда берутся обновления. Зашит в программу и в настройках не меняется.</summary>
+        public const string Repo = "noobggggggg-art/DreamIsland";
 
         private static readonly HttpClient Http = CreateClient();
 

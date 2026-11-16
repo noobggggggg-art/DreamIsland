@@ -564,7 +564,7 @@ namespace DreamIsland
 
             try
             {
-                string repo = AppSettings.GetString("update_repo", Updater.DefaultRepo);
+                string repo = Updater.Repo;
                 if (!Updater.IsRepoConfigured(repo))
                 {
                     if (manual) ShowToast("\uE7BA", false, Gray, "Обновления", "нужен репозиторий", Gray, -1, 2500);
@@ -635,18 +635,6 @@ namespace DreamIsland
         private void UpdateCheck_Click(object sender, RoutedEventArgs e)
         {
             _ = CheckUpdateAsync(true);
-        }
-
-        private void UpdateRepo_Click(object sender, RoutedEventArgs e)
-        {
-            string current = AppSettings.GetString("update_repo", Updater.DefaultRepo);
-            string v = InputDialog.AskText(
-                "DreamIsland — обновления",
-                "Репозиторий GitHub в виде «логин/DreamIsland» или ссылка на него.",
-                current);
-
-            if (v == null) return;
-            AppSettings.SetString("update_repo", Updater.NormalizeRepo(v));
         }
 
         // ---------- файлы в проводнике: выделено, удалено, перемещено ----------

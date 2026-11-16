@@ -1,0 +1,7 @@
+# Автоматические окончания строк
+* text=auto
+*.cs text
+*.xaml text
+*.csproj text
+*.md text
+*.yml text
