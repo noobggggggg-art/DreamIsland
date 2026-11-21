@@ -72,6 +72,31 @@
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="priv" Header="Точка записи (микрофон / камера)"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Tag="ts3" Header="Следить за TeamSpeak 3"
+                              IsCheckable="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Header="TeamSpeak 3: API-ключ…" Click="Ts3Key_Click"/>
+                    <MenuItem Header="TeamSpeak 3: название сервера…" Click="Ts3Name_Click"/>
+                    <MenuItem Header="TeamSpeak 3: проверить подключение" Click="Ts3Check_Click"/>
+                    <MenuItem Tag="dl" Header="Показывать загрузки Steam / Epic"
+                              IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Header="Загрузки: показать сейчас" Click="DownloadNow_Click"/>
+                    <MenuItem Tag="vidapp" Header="Этот плеер показывает видео"
+                              IsCheckable="True" IsEnabled="False" Click="VideoApp_Click"/>
+                    <MenuItem Tag="emo" Header="Эмоции для видео"
+                              IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Tag="screen" Header="Эмоции: цвет и вспышки по картинке видео"
+                              IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Tag="spk" Header="Эмоции: колонки в чёрных полосах по бокам"
+                              IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Header="Эмоции: анимация">
+                        <MenuItem Tag="emo0" Header="Авто" IsCheckable="True" IsChecked="True" Click="EmoMode_Click"/>
+                        <MenuItem Tag="emo1" Header="Спектр" IsCheckable="True" Click="EmoMode_Click"/>
+                        <MenuItem Tag="emo2" Header="Пульс" IsCheckable="True" Click="EmoMode_Click"/>
+                        <MenuItem Tag="emo3" Header="Вспышка" IsCheckable="True" Click="EmoMode_Click"/>
+                    </MenuItem>
+                    <MenuItem Tag="lowgpu" Header="Экономия видеопамяти (после перезапуска)"
+                              IsCheckable="True" Click="FeatureToggle_Click"/>
+                    <Separator/>
                     <MenuItem Tag="files" Header="Плашка файлов в проводнике"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="scvol" Header="Shift + колёсико: громкость SoundCloud"
@@ -123,6 +148,16 @@
                         <TextBlock x:Name="IdleVpnIcon" Text="&#xE785;"
                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                                    Foreground="#8E8E93" Opacity="0.6" VerticalAlignment="Center"/>
+                        <Grid x:Name="IdleVolMini" Width="22" Height="12" Margin="10,0,0,0"
+                              VerticalAlignment="Center" Opacity="0.65" IsHitTestVisible="False">
+                            <Border Height="3" VerticalAlignment="Top" CornerRadius="1.5" Background="#3A3A3C"/>
+                            <Border x:Name="IdleVolSysFill" Height="3" Width="0" VerticalAlignment="Top"
+                                    HorizontalAlignment="Left" CornerRadius="1.5" Background="White"/>
+                            <Border x:Name="IdleVolBrTrack" Height="3" VerticalAlignment="Bottom"
+                                    CornerRadius="1.5" Background="#3A3A3C"/>
+                            <Border x:Name="IdleVolBrFill" Height="3" Width="0" VerticalAlignment="Bottom"
+                                    HorizontalAlignment="Left" CornerRadius="1.5" Background="White"/>
+                        </Grid>
                     </StackPanel>
                 </StackPanel>
 
@@ -212,6 +247,16 @@
                         <TextBlock x:Name="VpnIcon" Text="&#xE785;"
                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                                    Foreground="#8E8E93" Opacity="0.6" VerticalAlignment="Center"/>
+                        <Grid x:Name="VolMini" Width="22" Height="12" Margin="10,0,0,0"
+                              VerticalAlignment="Center" Opacity="0.65" IsHitTestVisible="False">
+                            <Border Height="3" VerticalAlignment="Top" CornerRadius="1.5" Background="#3A3A3C"/>
+                            <Border x:Name="VolSysFill" Height="3" Width="0" VerticalAlignment="Top"
+                                    HorizontalAlignment="Left" CornerRadius="1.5" Background="White"/>
+                            <Border x:Name="VolBrTrack" Height="3" VerticalAlignment="Bottom"
+                                    CornerRadius="1.5" Background="#3A3A3C"/>
+                            <Border x:Name="VolBrFill" Height="3" Width="0" VerticalAlignment="Bottom"
+                                    HorizontalAlignment="Left" CornerRadius="1.5" Background="White"/>
+                        </Grid>
                     </StackPanel>
 
                     <!-- Эквалайзер (цвет берётся из обложки) -->
@@ -291,6 +336,108 @@
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
+                </Grid>
+
+                <!-- Остров TeamSpeak 3 -->
+                <Grid x:Name="TsPanel" Margin="14,0" VerticalAlignment="Top"
+                      Opacity="0" Visibility="Collapsed" IsHitTestVisible="False">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock x:Name="TsIcon" Text="&#xE7F6;"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
+                                   Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TsServer" Foreground="#8E8E93" FontSize="11" MaxWidth="90"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI"
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="TsTalk" Foreground="White" FontSize="13" FontWeight="SemiBold" MaxWidth="170"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI"
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                            <StackPanel x:Name="TsWave" Orientation="Horizontal" Height="14" Margin="0,0,10,0"
+                                        Visibility="Collapsed">
+                                <Rectangle Width="3" Height="14" Margin="1.5,0" RadiusX="1.5" RadiusY="1.5" Fill="#30D158"
+                                           VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="TsS1" ScaleY="0.3"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="3" Height="14" Margin="1.5,0" RadiusX="1.5" RadiusY="1.5" Fill="#30D158"
+                                           VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="TsS2" ScaleY="0.3"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="3" Height="14" Margin="1.5,0" RadiusX="1.5" RadiusY="1.5" Fill="#30D158"
+                                           VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="TsS3" ScaleY="0.3"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                            </StackPanel>
+
+                            <!-- микрофон TeamSpeak -->
+                            <TextBlock x:Name="TsMicIcon" Text="&#xE720;"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="#30D158" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <!-- звук TeamSpeak выключен -->
+                            <TextBlock x:Name="TsSpkIcon" Text="&#xE74F;"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="#FF453A" VerticalAlignment="Center" Margin="0,0,8,0"
+                                       Visibility="Collapsed"/>
+                            <!-- микрофон Windows — показывается только когда выключен -->
+                            <StackPanel x:Name="TsWinMic" Orientation="Horizontal" VerticalAlignment="Center"
+                                        Margin="0,0,8,0" Visibility="Collapsed">
+                                <TextBlock Text="&#xE720;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="14" Foreground="#FF453A" VerticalAlignment="Center"/>
+                                <TextBlock Text="Win" Foreground="#FF453A" FontSize="9" FontWeight="Bold"
+                                           VerticalAlignment="Bottom" Margin="1,0,0,3"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TsLayout" Text="--" MinWidth="16"
+                                       Foreground="White" FontSize="11" FontWeight="Bold"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- при наведении: дата и время, оба микрофона, VPN, раскладка -->
+                    <StackPanel x:Name="TsMore" Grid.Row="1" Margin="0,2,0,12" Opacity="0" Visibility="Collapsed">
+                        <TextBlock x:Name="TsDateTime" Foreground="White" FontSize="14" FontWeight="SemiBold"
+                                   FontFamily="Segoe UI Variable Display, Segoe UI"/>
+                        <TextBlock x:Name="TsLine1" Foreground="#A0A0A0" FontSize="12" Margin="0,6,0,0"
+                                   FontFamily="Segoe UI Variable Display, Segoe UI" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel x:Name="TsIcons" Orientation="Horizontal" Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TsHMic" Text="&#xE720;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" Foreground="#30D158" VerticalAlignment="Center"/>
+                                <TextBlock Text="TS" Foreground="#8E8E93" FontSize="10" FontWeight="Bold" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TsHSpk" Text="&#xE767;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" Foreground="#30D158" VerticalAlignment="Center"/>
+                                <TextBlock Text="TS" Foreground="#8E8E93" FontSize="10" FontWeight="Bold" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TsHWinMic" Text="&#xE720;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" Foreground="#30D158" VerticalAlignment="Center"/>
+                                <TextBlock Text="Win" Foreground="#8E8E93" FontSize="10" FontWeight="Bold" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TsHVpn" Text="&#xE785;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" Foreground="#8E8E93"
+                                       VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <TextBlock x:Name="TsHLay" Text="--" Foreground="White" FontSize="12" FontWeight="Bold"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Остров «Эмоции» (видео): столбики спектра, цвет и вспышки под звук -->
+                <Grid x:Name="EmoPanel" Margin="14,0" VerticalAlignment="Center" Height="40"
+                      Opacity="0" Visibility="Collapsed" IsHitTestVisible="False">
+                    <StackPanel x:Name="EmoBars" Orientation="Horizontal"
+                                HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
                 </Grid>
 
                 <!-- Последние скопированные фрагменты (при наведении сразу после копирования) -->

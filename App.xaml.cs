@@ -2,6 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace DreamIsland
 {
@@ -47,6 +50,13 @@ namespace DreamIsland
             {
                 Shutdown();
                 return;
+            }
+
+            // «Экономия видеопамяти»: рисуем процессором и ограничиваем анимации 30 кадрами в секунду
+            if (AppSettings.GetBool("lowgpu"))
+            {
+                RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+                Timeline.DesiredFrameRateProperty.OverrideMetadata(typeof(Timeline), new FrameworkPropertyMetadata(30));
             }
 
             base.OnStartup(e);

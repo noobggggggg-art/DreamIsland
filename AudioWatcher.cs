@@ -26,6 +26,12 @@ namespace DreamIsland
         /// <summary>Выключен ли микрофон по умолчанию (средствами Windows)</summary>
         public bool MicMuted { get; private set; }
 
+        /// <summary>Громкость динамиков в процентах (-1, если ещё неизвестна)</summary>
+        public int Volume { get { return _lastVol; } }
+
+        /// <summary>Выключен ли звук в системе</summary>
+        public bool Muted { get { return _lastMuted; } }
+
         /// <summary>(громкость 0..100, выключен ли звук)</summary>
         public event Action<int, bool> VolumeChanged;
 

@@ -15,6 +15,17 @@ A "Dynamic Island" for Windows 10/11, inspired by the iPhone: a small black caps
 - the equalizer and glow take their colour from the cover art;
 - **live equalizer**: the bars and the glow move to the real sound (bass / mids / highs).
 
+**Video** (any player that reports playback to Windows, plus videos in a browser)
+- the **Emotions** island: bars, glow and flashes follow the sound and the beat, the island bounces on the kick;
+- colour and flashes follow the **picture** of the video (dominant colour, scene cuts, strobe lights);
+- two animated **speakers** slide into the black side bars of vertical videos and pulse with the music.
+
+**TeamSpeak 3**
+- who is talking, microphone / sound mute state, server name, user count, volume with Alt + wheel.
+
+**Downloads**
+- percentage, speed and a "done" notice for **Steam** and **Epic Games Launcher** downloads.
+
 **Indicators** (always visible next to the date or the music)
 - keyboard layout, microphone (on / off), VPN (DreamVPN);
 - **recording dot**: a blue circle means an app is using the microphone, a purple diamond means the camera;
@@ -26,7 +37,8 @@ A "Dynamic Island" for Windows 10/11, inspired by the iPhone: a small black caps
 - VPN connected / disconnected;
 - screenshot saved (with a thumbnail), text copied;
 - in Explorer: how many files are selected, deleted or moved (shown for 1.5 seconds);
-- an app started using the microphone or the camera.
+- an app started using the microphone or the camera;
+- a Steam / Epic download started, reached the next 10 %, or finished.
 
 **Tools**
 - timer, stopwatch, pomodoro (25/5);
@@ -66,8 +78,8 @@ The update source is built into the program and cannot be changed in the setting
 
 To publish a new version:
 ```
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 ## VPN (DreamVPN only)
@@ -91,6 +103,35 @@ The VPN indicator and notifications are built for [DreamVPN](https://github.com/
 
 ## Other setup
 
+### Islands
+DreamIsland has four "islands" that replace each other:
+1. **Default** (date and indicators), when nothing is playing;
+2. **Music**, when something is playing;
+3. **TeamSpeak 3**, while you are connected to a server (replaces the music island);
+4. **Emotions**, while a video is playing (hover the island to get the music controls back).
+
+### TeamSpeak 3
+Shows who is talking, whether your microphone / sound are muted, and the server name (you can give it your own short name from the menu). While someone talks, the island glows green and "breathes". Hover for the full date and time, VPN, layout and both microphones (TeamSpeak and Windows). **Alt + wheel** over the island changes the volume of TeamSpeak itself.
+1. In TeamSpeak 3: **Tools → Options → Addons → Plugins** → enable **ClientQuery**, press **Settings** and copy the **API key**.
+2. In the island menu: **TeamSpeak 3: API key…** → paste it, then enable **Follow TeamSpeak 3**.
+
+Everything goes through the local ClientQuery plugin (`127.0.0.1:25639`); nothing leaves your computer.
+
+### Emotions (video)
+When a video plays (the island recognises it by the player's media type, the file extension such as `.mov`, or the player name), the island turns into a live visualiser: bars follow the spectrum, the colour follows the timbre of the sound, the glow pulses on the kick drum and the island flashes on snare hits. Pick the animation in the menu: *Auto, Spectrum, Pulse, Flash*. The island listens to the system sound only (nothing is recorded).
+
+**Picture analysis** (menu: *Colour and flashes from the video picture*): while a video plays, the island takes tiny 96×54 frames of the primary screen about 8 times a second, only to pick the dominant colour, detect scene cuts / strobe flashes and find black side bars. Frames are never saved or sent anywhere. If the video is DRM-protected and the screen shows black, the island falls back to colours from the sound.
+
+**Speakers** (menu: *Speakers in the black side bars*): when the video has black bars at the sides (for example a phone video on a wide screen), two small speaker widgets slide into the bars, take the video colour and pulse on the kick drum. They are click-through and are excluded from screen capture, so they will not show up in OBS recordings. Bars narrower than about 56 px are ignored.
+
+### Steam and Epic downloads
+While Steam or the Epic Games Launcher is downloading something, the island shows a toast with the game name, percentage and speed: at the start, every 10 %, and when it finishes. *Downloads: show now* in the menu shows the current download on demand; *Show Steam / Epic downloads* toggles it.
+
+The island only reads the launchers' own files and sends nothing over the network. Steam's percentage is exact (from `appmanifest_*.acf`) but Steam writes it to disk irregularly, so it updates in jumps. Epic has no official progress file, so its percentage is an estimate: the size of the half-installed game folder relative to its full size.
+
+### Low video memory
+**Low video memory (after restart)** switches WPF to software rendering, removes the glow blur and limits animations to 30 fps. Useful if a game is short on video memory.
+
 ### OBS
 1. In OBS: **Tools → WebSocket Server Settings** → enable the server (port 4455).
 2. In the island menu enable **Follow OBS**; if OBS has a password, enter it in **OBS: password…**.
@@ -108,6 +149,8 @@ Some microphones (for example Fifine AM8) mute themselves internally, and Window
 - **Clipboard**: history lives only in memory and is cleared on exit; anything a password manager marks as "do not save" is skipped. You can disable or clear it from the menu.
 - **Live equalizer and microphone-by-sound**: sound is analysed on the fly (only loudness is computed); it is never recorded or sent anywhere.
 - **Recording dot** reads the Windows privacy log (Settings → Privacy → Microphone / Camera).
+- **Screen picture** (video mode only): while the Emotions island is active, tiny 96×54 frames of the primary screen are taken in memory about 8 times a second to pick a colour and find black bars. They are never saved or sent anywhere. It can be turned off in the menu.
+- **Steam / Epic downloads**: only the launchers' own files on your computer are read.
 - **Network**: the only internet request is the update check to `api.github.com` (and the download from GitHub). It can be turned off in the menu. OBS is contacted only on your own computer (`127.0.0.1`).
 
 ## Known limitations
@@ -116,6 +159,10 @@ Some microphones (for example Fifine AM8) mute themselves internally, and Window
 - Screenshots are detected in `Pictures\Screenshots` (where Win+PrintScreen saves them).
 - Explorer plaques only see files leaving the open folder; with several tabs in one window the selection may come from the wrong tab.
 - If a player does not report the track length, progress and seeking are unavailable.
+- The speakers are hidden from screen capture on purpose, so they do not appear in OBS or screenshots.
+- Epic Games Launcher has no official progress file: its percentage is an estimate and may be missing for updates of already installed games.
+- Steam writes download progress to disk irregularly, so its percentage updates in jumps.
+- Only the primary screen is analysed in video mode.
 
 ## License
 MIT, see [LICENSE](LICENSE).

@@ -16,14 +16,17 @@ namespace DreamIsland
 {
     public partial class MainWindow : Window
     {
-        private enum IslandState { Idle, IdleHover, Compact, Expanded, Toast, Clip }
+        private enum IslandState { Idle, IdleHover, Compact, Expanded, Toast, Clip, Ts, TsHover, Emo }
 
         // Размеры состояний: ширина, высота, скругление, размер обложки
-        private static readonly (double W, double H, double R, double Art) IdleSize      = (210, 32, 16, 22);
-        private static readonly (double W, double H, double R, double Art) IdleHoverSize = (300, 40, 20, 22);
-        private static readonly (double W, double H, double R, double Art) CompactSize   = (310, 34, 17, 22);
-        private static readonly (double W, double H, double R, double Art) ExpandedSize  = (390, 144, 32, 56);
+        private static readonly (double W, double H, double R, double Art) IdleSize      = (244, 32, 16, 22);
+        private static readonly (double W, double H, double R, double Art) IdleHoverSize = (334, 40, 20, 22);
+        private static readonly (double W, double H, double R, double Art) CompactSize   = (344, 34, 17, 22);
+        private static readonly (double W, double H, double R, double Art) ExpandedSize  = (420, 144, 32, 56);
         private static readonly (double W, double H, double R, double Art) ToastSize     = (320, 44, 22, 22);
+        private static readonly (double W, double H, double R, double Art) TsSize        = (330, 34, 17, 22);
+        private static readonly (double W, double H, double R, double Art) TsHoverSize   = (420, 120, 28, 22);
+        private static readonly (double W, double H, double R, double Art) EmoSize       = (440, 56, 28, 22);
 
         private const double ExpandedTopRowHeight = 76;
 
@@ -211,13 +214,17 @@ namespace DreamIsland
 
         private void OnMediaChanged(MediaInfo info, bool trackChanged)
         {
-            _hasMedia = !string.IsNullOrWhiteSpace(info.Title);
+            // у видео с телефона (IMG_1536.MOV) в метаданных нет названия — но оно идёт, значит остров должен реагировать
+            _hasMedia = !string.IsNullOrWhiteSpace(info.Title) || (info.Playing && !string.IsNullOrEmpty(info.App));
             _playing = info.Playing;
+            _isVideo = info.Video;
+            _curApp = info.App ?? "";
+            UpdateVideoAppMenu();
             PlayGlyph.Text = _playing ? "\uE769" : "\uE768";
 
             if (trackChanged)
             {
-                TitleText.Text = info.Title;
+                TitleText.Text = !string.IsNullOrWhiteSpace(info.Title) ? info.Title : (info.Video ? "Видео" : ShortApp(info.App));
                 ArtistText.Text = info.Artist;
                 SetArt(info.Thumb);
 
@@ -354,6 +361,7 @@ namespace DreamIsland
 
         private void SetAccent(Color c)
         {
+            _curAccent = c;
             var d = TimeSpan.FromMilliseconds(500);
             _accent.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(c, d));
             _glow.BeginAnimation(DropShadowEffect.ColorProperty, new ColorAnimation(c, d));
@@ -361,7 +369,7 @@ namespace DreamIsland
 
         private void UpdateGlow()
         {
-            bool on = _hasMedia && _playing;
+            bool on = _state == IslandState.Emo || (TsActive ? _tsTalking : (_hasMedia && _playing));
             if (on == _glowOn) return;
             _glowOn = on;
             _glow.BeginAnimation(DropShadowEffect.OpacityProperty,
@@ -375,8 +383,10 @@ namespace DreamIsland
             IslandState want;
             if (_toast) want = IslandState.Toast;
             else if (WantClip()) want = IslandState.Clip;
+            else if (TsActive) want = _hover ? IslandState.TsHover : IslandState.Ts;   // TeamSpeak 3 важнее музыки
             else if (!_hasMedia) want = IslandState.Idle;
             else if (_hover || _alert) want = IslandState.Expanded;
+            else if (EmoActive) want = IslandState.Emo;                                 // видео — остров «Эмоции»
             else if (_playing) want = IslandState.Compact;
             else want = IslandState.Idle;
 
@@ -392,6 +402,9 @@ namespace DreamIsland
             _state = want;
 
             var size = want == IslandState.Clip ? ClipSizeNow()
+                     : want == IslandState.TsHover ? TsHoverSize
+                     : want == IslandState.Ts ? TsSize
+                     : want == IslandState.Emo ? EmoSize
                      : want == IslandState.Expanded ? ExpandedSize
                      : want == IslandState.Compact ? CompactSize
                      : want == IslandState.IdleHover ? IdleHoverSize
@@ -416,6 +429,9 @@ namespace DreamIsland
             Fade(Ring, want == IslandState.Compact, 200, 220);
             Fade(ToastPanel, want == IslandState.Toast, 120, 220);
             Fade(ClipPanel, want == IslandState.Clip, 140, 220);
+            Fade(TsPanel, want == IslandState.Ts || want == IslandState.TsHover, 120, 220);
+            Fade(TsMore, want == IslandState.TsHover, 120, 220);
+            Fade(EmoPanel, want == IslandState.Emo, 120, 220);
 
             if (want == IslandState.Expanded || want == IslandState.Compact)
             {
@@ -430,6 +446,7 @@ namespace DreamIsland
 
             RefreshMarquee();
             UpdateLiveEq();
+            UpdateTsTick();
         }
 
         private static DoubleAnimation Spring(double to)
@@ -510,12 +527,14 @@ namespace DreamIsland
             MarqueeText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
             double tw = MarqueeText.DesiredSize.Width;
-            double aw = CompactSize.W + ExtraFor(IslandState.Compact) - 157; // ширина капсулы минус обложка, эквалайзер и отступы
+            double aw = MarqueeHost.ActualWidth > 40
+                ? MarqueeHost.ActualWidth                                       // реальная ширина свободного места
+                : CompactSize.W + ExtraFor(IslandState.Compact) - 189;           // запасной вариант, пока размеры не посчитаны
             const double pad = 8;
 
             if (tw <= aw - 2 * pad)
             {
-                MarqueeShift.X = (aw - tw) / 2; // короткое название — по центру
+                MarqueeShift.X = pad; // короткое название — слева, вплотную к обложке
                 return;
             }
 
@@ -696,6 +715,10 @@ namespace DreamIsland
 
         private void OnVolume(int percent, bool muted)
         {
+            _volSys = percent;
+            _volSysMuted = muted;
+            UpdateVolMini();
+
             string icon = muted || percent == 0 ? "\uE74F"
                         : percent < 34 ? "\uE993"
                         : percent < 67 ? "\uE994"
@@ -743,6 +766,8 @@ namespace DreamIsland
             IdleVpnIcon.Text = VpnIcon.Text;
             IdleVpnIcon.Foreground = VpnIcon.Foreground;
             IdleVpnIcon.Opacity = VpnIcon.Opacity;
+
+            UpdateTsUi();   // остров TeamSpeak показывает раскладку и микрофон Windows
         }
 
         private void OnVpn(bool on, string info)
@@ -801,6 +826,14 @@ namespace DreamIsland
 
         private void Island_Wheel(object sender, MouseWheelEventArgs e)
         {
+            // Alt + колёсико — громкость TeamSpeak 3
+            if (IsAltDown())
+            {
+                AdjustTs3(e.Delta / 120.0 * 0.02);
+                e.Handled = true;
+                return;
+            }
+
             // Shift + колёсико — громкость SoundCloud, просто колёсико — громкость всей системы
             if (_scVolEnabled && IsShiftDown())
             {

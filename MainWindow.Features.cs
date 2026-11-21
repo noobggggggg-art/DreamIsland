@@ -59,7 +59,24 @@ namespace DreamIsland
             if (_filesEnabled) _explorer.Start();
 
             // свечение кэшируется как картинка: пульсация не заставляет заново считать размытие
-            GlowBack.CacheMode = new BitmapCache();
+            // экономия видеопамяти: без размытия вокруг острова (остальное — в App.xaml.cs при запуске)
+            _lowGpu = AppSettings.GetBool("lowgpu");
+            SetMenu("lowgpu", _lowGpu);
+            if (_lowGpu) GlowBack.Effect = null;
+            else GlowBack.CacheMode = new BitmapCache();
+
+            InitVol();
+            InitTs3();
+            InitEmo();
+            InitDownloads();
+
+            // название в свёрнутом виде подгоняется под реальную ширину свободного места
+            var mqTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+            mqTimer.Tick += (s, e) => { mqTimer.Stop(); RefreshMarquee(); };
+            MarqueeHost.SizeChanged += (s, e) =>
+            {
+                if (_state == IslandState.Compact) { mqTimer.Stop(); mqTimer.Start(); }
+            };
 
             // обновления
             _autoUpdate = !AppSettings.GetBool("noautoupdate"); SetMenu("autoupdate", _autoUpdate);
@@ -84,6 +101,11 @@ namespace DreamIsland
             _shots.Dispose();
             _priv.Dispose();
             _explorer.Dispose();
+            _ts3.Dispose();
+            _emoTick.Stop();
+            DisposeVideo();
+            DisposeDownloads();
+            DisposeVol();
         }
 
         private void FeatureToggle_Click(object sender, RoutedEventArgs e)
@@ -119,6 +141,41 @@ namespace DreamIsland
                     AppSettings.SetBool("nopriv", !on);
                     if (on) _priv.Start();
                     else { _priv.Stop(); ApplyPriv(new List<string>(), new List<string>()); }
+                    break;
+
+                case "ts3":
+                    _ts3Enabled = on;
+                    AppSettings.SetBool("ts3", on);
+                    if (on) StartTs3();
+                    else
+                    {
+                        _ts3.Stop();
+                        _ts = new Ts3State();
+                        _tsTalking = false;
+                        UpdateTsUi();
+                        UpdateTsEffects();
+                        Apply();
+                    }
+                    break;
+
+                case "dl":
+                    Downloads_Toggle(on);
+                    break;
+
+                case "screen":
+                case "spk":
+                    Video_Toggle(tag, on);
+                    break;
+
+                case "emo":
+                    _emoEnabled = on;
+                    AppSettings.SetBool("noemo", !on);
+                    Apply();
+                    break;
+
+                case "lowgpu":
+                    AppSettings.SetBool("lowgpu", on);
+                    ShowToast("\uE7BA", false, Orange, "Видеопамять", "перезапусти", Orange, -1, 3500);
                     break;
 
                 case "autoupdate":
@@ -177,6 +234,9 @@ namespace DreamIsland
                 case IslandState.IdleHover: return IdleHoverSize.W;
                 case IslandState.Toast: return ToastSize.W;
                 case IslandState.Clip: return ClipSizeNow().W;
+                case IslandState.TsHover: return TsHoverSize.W;
+                case IslandState.Ts: return TsSize.W;
+                case IslandState.Emo: return EmoSize.W;
                 default: return IdleSize.W;
             }
         }
@@ -201,24 +261,37 @@ namespace DreamIsland
 
         private void UpdateLiveEq()
         {
-            bool want = _liveEqEnabled && _playing &&
-                        (_state == IslandState.Compact || _state == IslandState.Expanded);
-            if (want == _eqRunning) return;
-            _eqRunning = want;
+            bool eq = _liveEqEnabled && _playing &&
+                      (_state == IslandState.Compact || _state == IslandState.Expanded);
+            bool emo = _state == IslandState.Emo;
 
-            if (want)
+            if (eq != _eqRunning)
             {
-                _levels.Start();
-                _eqTick.Start();
+                _eqRunning = eq;
+                if (eq)
+                {
+                    _eqTick.Start();
+                }
+                else
+                {
+                    _eqTick.Stop();
+                    _sBass = _sMid = _sHigh = 0;
+                    Bar1.ScaleY = Bar2.ScaleY = Bar3.ScaleY = 0.3;
+                    GlowBack.Opacity = 1;
+                }
             }
-            else
+
+            if (emo != _emoRunning)
             {
-                _eqTick.Stop();
-                _levels.Stop();
-                _sBass = _sMid = _sHigh = 0;
-                Bar1.ScaleY = Bar2.ScaleY = Bar3.ScaleY = 0.3;
-                GlowBack.Opacity = 1;
+                _emoRunning = emo;
+                if (emo) { _emoTick.Start(); StartVideo(); }
+                else { _emoTick.Stop(); StopVideo(); ResetEmo(); }
             }
+
+            // анализатор звука работает, только пока он кому-то нужен
+            bool need = eq || emo;
+            if (need && !_levels.Running) _levels.Start();
+            else if (!need && _levels.Running) _levels.Stop();
         }
 
         private void EqTick()
