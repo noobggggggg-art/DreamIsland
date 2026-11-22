@@ -14,6 +14,8 @@ namespace DreamIsland
         public int LeftBarPx, RightBarPx;  // ширина чёрных полос слева и справа, в пикселях экрана
         public int ScreenW, ScreenH;       // размер основного экрана в пикселях
         public int FlashCount;             // растёт на каждой вспышке или смене сцены
+        public bool ValidL, ValidR;        // левая / правая треть картинки не чёрная и разобрана
+        public Color ColorL, ColorR;       // главный цвет левой и правой трети картинки (для левой и правой колонки)
     }
 
     /// <summary>
@@ -191,6 +193,12 @@ namespace DreamIsland
                             int cnt = 0;
                             long diff = 0;
 
+                            // левая и правая треть картинки — для цвета левой и правой колонки
+                            int third = Math.Max(2, (x1 - x0) / 3);
+                            int xl = x0 + third, xr = x1 - third;
+                            double lr = 0, lg = 0, lb = 0, lw = 0, lbright = 0; int lcnt = 0;
+                            double rr = 0, rg = 0, rb = 0, rw = 0, rbright = 0; int rcnt = 0;
+
                             for (int y = SkipTopRows; y < H - SkipBottomRows; y++)
                             {
                                 int row = y * W;
@@ -206,6 +214,9 @@ namespace DreamIsland
                                     bright += lum[row + x];
                                     cnt++;
 
+                                    if (x < xl) { lr += r * weight; lg += g * weight; lb += b * weight; lw += weight; lbright += lum[row + x]; lcnt++; }
+                                    if (x >= xr) { rr += r * weight; rg += g * weight; rb += b * weight; rw += weight; rbright += lum[row + x]; rcnt++; }
+
                                     if (havePrev) diff += Math.Abs(lum[row + x] - prev[row + x]);
                                 }
                             }
@@ -218,6 +229,17 @@ namespace DreamIsland
                                 snap.Valid = true;
                                 snap.Brightness = bright;
                                 snap.Color = Color.FromRgb((byte)(sr / sweight), (byte)(sg / sweight), (byte)(sb / sweight));
+                            }
+
+                            if (lcnt > 0 && lw > 0 && lbright / lcnt > 4)
+                            {
+                                snap.ValidL = true;
+                                snap.ColorL = Color.FromRgb((byte)(lr / lw), (byte)(lg / lw), (byte)(lb / lw));
+                            }
+                            if (rcnt > 0 && rw > 0 && rbright / rcnt > 4)
+                            {
+                                snap.ValidR = true;
+                                snap.ColorR = Color.FromRgb((byte)(rr / rw), (byte)(rg / rw), (byte)(rb / rw));
                             }
 
                             // вспышка: резкая смена сцены или скачок яркости (стробоскоп, свет на сцене)

@@ -40,13 +40,14 @@
                 MouseEnter="Island_MouseEnter"
                 MouseLeave="Island_MouseLeave"
                 MouseLeftButtonUp="Island_Click"
-                MouseWheel="Island_Wheel">
+                MouseWheel="Island_Wheel"
+                ContextMenuOpening="Island_ContextMenuOpening">
 
             <Border.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Следить за микрофоном (по звуку)"
+                    <MenuItem Tag="micwatch" Header="Следить за микрофоном (по звуку)"
                               IsCheckable="True" Click="MicWatch_Click"/>
-                    <MenuItem Header="Показать уровень микрофона (отладка)"
+                    <MenuItem Tag="micdebug" Header="Показать уровень микрофона (отладка)"
                               IsCheckable="True" Click="MicDebug_Click"/>
                     <Separator/>
                     <MenuItem Header="Таймер">
@@ -57,29 +58,29 @@
                         <MenuItem Header="45 минут" Tag="45" Click="Timer_Click"/>
                         <MenuItem Header="1 час" Tag="60" Click="Timer_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Секундомер" Click="Stopwatch_Click"/>
-                    <MenuItem Header="Помодоро (25 / 5)" Click="Pomodoro_Click"/>
-                    <MenuItem Header="Пауза / продолжить таймер" Click="TimerPause_Click"/>
-                    <MenuItem Header="Остановить таймер" Click="TimerStop_Click"/>
+                    <MenuItem Tag="stopwatch" Header="Секундомер" Click="Stopwatch_Click"/>
+                    <MenuItem Tag="pomodoro" Header="Помодоро (25 / 5)" Click="Pomodoro_Click"/>
+                    <MenuItem Tag="timerpause" Header="Пауза / продолжить таймер" Click="TimerPause_Click"/>
+                    <MenuItem Tag="timerstop" Header="Остановить таймер" Click="TimerStop_Click"/>
                     <Separator/>
                     <Separator/>
                     <MenuItem Tag="liveeq" Header="Живой эквалайзер (под звук)"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="clip" Header="История буфера обмена"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
-                    <MenuItem Header="Очистить историю буфера" Click="ClipClear_Click"/>
+                    <MenuItem Tag="clipclear" Header="Очистить историю буфера" Click="ClipClear_Click"/>
                     <MenuItem Tag="shots" Header="Плашка скриншотов"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="priv" Header="Точка записи (микрофон / камера)"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="ts3" Header="Следить за TeamSpeak 3"
                               IsCheckable="True" Click="FeatureToggle_Click"/>
-                    <MenuItem Header="TeamSpeak 3: API-ключ…" Click="Ts3Key_Click"/>
-                    <MenuItem Header="TeamSpeak 3: название сервера…" Click="Ts3Name_Click"/>
-                    <MenuItem Header="TeamSpeak 3: проверить подключение" Click="Ts3Check_Click"/>
+                    <MenuItem Tag="ts3key" Header="TeamSpeak 3: API-ключ…" Click="Ts3Key_Click"/>
+                    <MenuItem Tag="ts3name" Header="TeamSpeak 3: название сервера…" Click="Ts3Name_Click"/>
+                    <MenuItem Tag="ts3check" Header="TeamSpeak 3: проверить подключение" Click="Ts3Check_Click"/>
                     <MenuItem Tag="dl" Header="Показывать загрузки Steam / Epic"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
-                    <MenuItem Header="Загрузки: показать сейчас" Click="DownloadNow_Click"/>
+                    <MenuItem Tag="dlnow" Header="Загрузки: показать сейчас" Click="DownloadNow_Click"/>
                     <MenuItem Tag="vidapp" Header="Этот плеер показывает видео"
                               IsCheckable="True" IsEnabled="False" Click="VideoApp_Click"/>
                     <MenuItem Tag="emo" Header="Эмоции для видео"
@@ -88,6 +89,20 @@
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="spk" Header="Эмоции: колонки в чёрных полосах по бокам"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Header="Эмоции: стиль колонок">
+                        <MenuItem Tag="spkstyle0" Header="Неон" IsCheckable="True" IsChecked="True" Click="SpkStyle_Click"/>
+                        <MenuItem Tag="spkstyle1" Header="Ретро" IsCheckable="True" Click="SpkStyle_Click"/>
+                        <MenuItem Tag="spkstyle2" Header="Минимализм" IsCheckable="True" Click="SpkStyle_Click"/>
+                    </MenuItem>
+                    <MenuItem Tag="spkfloat" Header="Эмоции: колонки поверх картинки, если нет чёрных полос"
+                              IsCheckable="True" Click="FeatureToggle_Click"/>
+                    <MenuItem Header="Эмоции: чувствительность (дроп, искры, нарастание)">
+                        <MenuItem Tag="sens0" Header="Тихо (только самые сильные моменты)" IsCheckable="True" Click="Sens_Click"/>
+                        <MenuItem Tag="sens1" Header="Обычно" IsCheckable="True" IsChecked="True" Click="Sens_Click"/>
+                        <MenuItem Tag="sens2" Header="Жёстко (реагирует на всё)" IsCheckable="True" Click="Sens_Click"/>
+                    </MenuItem>
+                    <MenuItem Tag="emodebug" Header="Эмоции: отладочная панель с числами"
+                              IsCheckable="True" Click="FeatureToggle_Click"/>
                     <MenuItem Header="Эмоции: анимация">
                         <MenuItem Tag="emo0" Header="Авто" IsCheckable="True" IsChecked="True" Click="EmoMode_Click"/>
                         <MenuItem Tag="emo1" Header="Спектр" IsCheckable="True" Click="EmoMode_Click"/>
@@ -103,7 +118,7 @@
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <MenuItem Tag="obs" Header="Следить за OBS"
                               IsCheckable="True" Click="FeatureToggle_Click"/>
-                    <MenuItem Header="OBS: пароль…" Click="ObsPassword_Click"/>
+                    <MenuItem Tag="obspass" Header="OBS: пароль…" Click="ObsPassword_Click"/>
                     <Separator/>
                     <MenuItem Tag="devices" Header="Показывать подключение устройств"
                               IsCheckable="True" IsChecked="True" Click="Devices_Click"/>
@@ -111,11 +126,11 @@
                               IsCheckable="True" Click="AutoStart_Click"/>
                     <Separator/>
                     <MenuItem Tag="version" Header="DreamIsland" IsEnabled="False"/>
-                    <MenuItem Header="Проверить обновления" Click="UpdateCheck_Click"/>
+                    <MenuItem Tag="updcheck" Header="Проверить обновления" Click="UpdateCheck_Click"/>
                     <MenuItem Tag="autoupdate" Header="Автоматически проверять обновления"
                               IsCheckable="True" IsChecked="True" Click="FeatureToggle_Click"/>
                     <Separator/>
-                    <MenuItem Header="Выход" Click="Exit_Click"/>
+                    <MenuItem Tag="exit" Header="Выход" Click="Exit_Click"/>
                 </ContextMenu>
             </Border.ContextMenu>
 

@@ -78,8 +78,8 @@ The update source is built into the program and cannot be changed in the setting
 
 To publish a new version:
 ```
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 ## VPN (DreamVPN only)
@@ -122,7 +122,23 @@ When a video plays (the island recognises it by the player's media type, the fil
 
 **Picture analysis** (menu: *Colour and flashes from the video picture*): while a video plays, the island takes tiny 96×54 frames of the primary screen about 8 times a second, only to pick the dominant colour, detect scene cuts / strobe flashes and find black side bars. Frames are never saved or sent anywhere. If the video is DRM-protected and the screen shows black, the island falls back to colours from the sound.
 
-**Speakers** (menu: *Speakers in the black side bars*): when the video has black bars at the sides (for example a phone video on a wide screen), two small speaker widgets slide into the bars, take the video colour and pulse on the kick drum. They are click-through and are excluded from screen capture, so they will not show up in OBS recordings. Bars narrower than about 56 px are ignored.
+**Speakers** (menu: *Speakers in the black side bars*): when the video has black bars at the sides (for example a phone video on a wide screen), two small speaker widgets slide into the bars, take the video colour and pulse on the kick drum. They are click-through and are excluded from screen capture, so they will not show up in OBS recordings. Bars narrower than about 56 px are ignored. With stereo audio each speaker follows its own channel (a guitar hit on the left kicks the left speaker harder). When the music keeps building for several seconds the speakers charge up (rings contract, glow builds), and on the release (the drop) both speakers and the island flash at once. Extras: each speaker takes its colour from its own edge of the picture (pale, smoky footage keeps the music colour), a soft coloured light spreads over the black bar, 8–12 small sparks fly off on the hardest hits, and when the video is paused the speakers stay, dim and breathe slowly. Right-click menu → *Emo: speaker style* switches between Neon, Retro and Minimal. None of this uses blur; with *Save video memory* on, the light and the sparks are turned off.
+
+**Speaker effects** (Neon has all of them, Retro the softer ones, Minimal only the lull, rings and sparks): LED strips of 16 spectrum bands for the speaker's own channel light up on both sides of the cabinet; spotlight beams fan out of the speaker, sway, flicker with the highs and open wide on the drop; ripples (cymatics) travel across the cone; a runner light circles the cabinet frame, speeds up while the music builds and closes into a flashing outline on the drop; fireflies are pulled into the speaker during a build and burst out like fireworks on the drop; the cabinet glitches for a few frames with coloured stripes on a snare; and the drop sends a shockwave of two rings with a red/blue colour split plus a bright flare. With *Save video memory* on, the beams, fireflies, glitch and shockwave are turned off; the LED strips, ripples and runner stay.
+
+**Lull before the drop.** When a loud track suddenly goes quiet (a breakdown), the speakers and the island dim and freeze, the light is drawn inward (an "inhale"), and the first hard hit after the lull makes the drop noticeably stronger than usual.
+
+**Sensitivity** (menu *Emo: sensitivity*): *Quiet* reacts only to the strongest moments, *Normal* matches the old behaviour, *Hard* reacts to almost everything. The preset changes the build, drop, lull and spark thresholds (they used to be constants in the code) and is remembered.
+
+**Speakers over the picture** (menu *Emo: speakers over the picture when there are no black bars*, off by default): if the video has no bars, two small semi-transparent speakers hang at the left and right edges of the screen over the picture.
+
+**Debug panel** (menu *Emo: debug panel with numbers*, always off after a restart): a small window in the top-left corner shows loudness, intensity, build, energy growth and its threshold, burst and the drop threshold, lull, how long a drop can still be caught, the drop count, channel balance and the beat counters. Use it to pick a preset for your own videos. Click the panel to copy the numbers plus the last minute of history to the clipboard. It never takes focus and is excluded from screen capture.
+
+**DreamIslands interface.** A right click on the island opens a custom interface instead of the usual menu: four cubes appear in the middle of the screen, join up, turn into a rectangle, grow wider and then taller, and the sections appear from top to bottom. It is black with white text, purple edges on sections, buttons and switches, and the title DreamIslands at the top centre. Sections: **Clock** (timer, stopwatch, pomodoro, pause/resume, stop), **Sound** (turn the microphone on by sound, microphone debug), **Convenience** (live equalizer, emotions, player), **Services** (TeamSpeak 3, Steam/Epic, Explorer, clipboard, screenshots, OBS), **Statistics** (time in the programs you choose, break reminder), **Settings** (show connected devices, start with Windows, version, auto-update, recording dot, save video memory). Esc, the cross or a click outside closes it. The old context menu is still in the code as the "engine": the interface drives its items, so all the logic is unchanged.
+
+**Volume mixer** (Sound section): every program gets its own slider and a "Mute" button; playing ones are on top (with a lit dot). Programs are read from all output devices, and Windows applies a program's volume before the sound reaches Voicemeeter, so the mixer works through it too.
+
+**Statistics** (tab): you choose which programs to track. Minecraft and Roblox come ready and can be switched on or off; any other running program can be added with the "Choose from running" button (and removed with the cross). The island notices a launch by process name, never touches the program, shows the time today and over 7 days for each program and in total, and reminds you to take a break when one program runs longer than the chosen time (off, 30 minutes, 1 hour, 1.5 hours, 2 hours). Java Minecraft is recognised by its window title (Minecraft, Lunar Client, Badlion, Feather).
 
 ### Steam and Epic downloads
 While Steam or the Epic Games Launcher is downloading something, the island shows a toast with the game name, percentage and speed: at the start, every 10 %, and when it finishes. *Downloads: show now* in the menu shows the current download on demand; *Show Steam / Epic downloads* toggles it.

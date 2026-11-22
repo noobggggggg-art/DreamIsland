@@ -88,6 +88,7 @@ namespace DreamIsland
             firstCheck.Tick += (s, e) => { firstCheck.Stop(); AutoCheckUpdate(); };
             firstCheck.Start();
 
+            InitGames();
             Apply();
         }
 
@@ -165,6 +166,15 @@ namespace DreamIsland
                 case "screen":
                 case "spk":
                     Video_Toggle(tag, on);
+                    break;
+
+                case "spkfloat":
+                    _spkFloat = on;
+                    AppSettings.SetBool("spkfloat", on);
+                    break;
+
+                case "emodebug":
+                    Debug_Toggle(on);
                     break;
 
                 case "emo":
@@ -281,11 +291,26 @@ namespace DreamIsland
                 }
             }
 
+            // видео на паузе: колонки не пропадают, а тускнеют и тихо «дышат»
+            bool pz = PausedSpeakersWanted();
+
             if (emo != _emoRunning)
             {
                 _emoRunning = emo;
                 if (emo) { _emoTick.Start(); StartVideo(); }
-                else { _emoTick.Stop(); StopVideo(); ResetEmo(); }
+                else
+                {
+                    _emoTick.Stop();
+                    ResetEmo();
+                    if (!pz) StopVideo();
+                }
+            }
+
+            if (pz != _pzRunning)
+            {
+                _pzRunning = pz;
+                if (pz) StartPausedSpeakers();
+                else StopPausedSpeakers();
             }
 
             // анализатор звука работает, только пока он кому-то нужен
