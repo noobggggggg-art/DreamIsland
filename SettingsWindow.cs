@@ -18,7 +18,7 @@ namespace DreamIsland
     /// Окно ничего не решает само: каждый переключатель и кнопка управляют соответствующим пунктом
     /// контекстного меню острова (оно осталось «движком» и больше не показывается).
     /// </summary>
-    public sealed class SettingsWindow : Window
+    public sealed partial class SettingsWindow : Window
     {
         // ---------- палитра: чёрный, фиолетовый, белый ----------
         private static Brush Mk(uint argb)
@@ -54,10 +54,10 @@ namespace DreamIsland
         private readonly Border _exit;
         private readonly Border _card;
         private readonly ScrollViewer _scroll;
-        private readonly Border[] _cat = new Border[6];
+        private readonly Border[] _cat = new Border[7];
 
-        private static readonly string[] CatIcons = { "\u25F7", "\u266A", "\u2726", "\u25A6", "\u2197", "\u2699" };
-        private static readonly string[] CatNames = { "Часы", "Звук", "Удобство", "Сервисы", "Статистика", "Настройки" };
+        private static readonly string[] CatIcons = { "\u25F7", "\uE121", "\u266A", "\u2726", "\u25A6", "\u2197", "\u2699" };
+        private static readonly string[] CatNames = { "Часы", "Будильник", "Звук", "Удобство", "Сервисы", "Статистика", "Настройки" };
 
         private readonly double _pw, _ph;
 
@@ -129,7 +129,9 @@ namespace DreamIsland
             _ph = Math.Min(660, Height * 0.80);
 
             // затемнение за интерфейсом: клик по нему закрывает окно
-            _scrim = new Border { Background = Scrim, Opacity = 0 };
+            // снимок экрана до показа окна: из него делается размытое стекло
+            var shot = Fancy ? Backdrop.Capture() : null;
+            _scrim = BuildScrim(shot);
             _scrim.MouseLeftButtonDown += (s, e) => CloseAnimated(null);
             _root.Children.Add(_scrim);
 
@@ -142,12 +144,13 @@ namespace DreamIsland
                 Width = 32,
                 Height = 32,
                 CornerRadius = new CornerRadius(14),
-                Background = PanelBg,
-                BorderBrush = Purple,
-                BorderThickness = new Thickness(1.6),
+                Background = _glass ? PanelGlass : PanelBase,
+                BorderBrush = PanelRim,
+                BorderThickness = new Thickness(1.4),
                 Opacity = 0,
                 ClipToBounds = true
             };
+            _root.Children.Insert(1, BuildHalo(_panel));   // свечение вокруг панели
             stage.Children.Add(_panel);
 
             // четыре кубика
@@ -183,13 +186,19 @@ namespace DreamIsland
             _inner.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             _inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) });
             _inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            _panel.Child = _inner;
+            // фон-атмосфера лежит под содержимым; обрезается по скруглённой форме панели
+            var shell = new Grid();
+            shell.Children.Add(BuildAtmosphere());
+            shell.Children.Add(_inner);
+            RoundClip(shell, 12.6);
+            _panel.Child = shell;
 
             // шапка: DreamIslands по центру и крестик справа
             var header = new Grid { Margin = new Thickness(0, 16, 0, 12) };
             _title = T("DreamIslands", 22, White, FontWeights.SemiBold);
             _title.HorizontalAlignment = HorizontalAlignment.Center;
             _title.Opacity = 0;
+            if (Fancy) _title.Effect = Glow(Cl(0xFF8B5CF6), 16, 0.55);   // единственный «подсвеченный» текст
             header.Children.Add(_title);
 
             var closeText = T("\u2715", 13, White, FontWeights.SemiBold);
@@ -201,8 +210,8 @@ namespace DreamIsland
                 Height = 32,
                 CornerRadius = new CornerRadius(16),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = PurpleEdge,
-                Background = Brushes.Transparent,
+                BorderBrush = GlassEdge,
+                Background = GlassFaint,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 Margin = new Thickness(0, 0, 18, 0),
                 Child = closeText,
@@ -245,8 +254,8 @@ namespace DreamIsland
             {
                 CornerRadius = new CornerRadius(12),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = PurpleEdge,
-                Background = Brushes.Transparent,
+                BorderBrush = GlassEdge,
+                Background = GlassFaint,
                 Padding = new Thickness(10, 10, 10, 10),
                 Child = exitText,
                 Cursor = Cursors.Hand,
@@ -270,8 +279,8 @@ namespace DreamIsland
             {
                 CornerRadius = new CornerRadius(16),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = PurpleEdge,
-                Background = Black,
+                BorderBrush = GlassEdge,
+                Background = CardFill,
                 Padding = new Thickness(16, 14, 6, 10),
                 Child = _scroll,
                 Opacity = 0
@@ -323,7 +332,11 @@ namespace DreamIsland
             // 3. плашка растёт вширь, затем вверх и вниз
             _panel.BeginAnimation(WidthProperty, Anim(32, _pw, 320, 480));
             var grow = Anim(32, _ph, 360, 800);
-            grow.Completed += (s, e) => ShowContent();
+            grow.Completed += (s, e) =>
+            {
+                _halo.BeginAnimation(OpacityProperty, Anim(0, 1, 600));
+                ShowContent();
+            };
             _panel.BeginAnimation(HeightProperty, grow);
         }
 
@@ -372,6 +385,7 @@ namespace DreamIsland
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             var icon = T(CatIcons[idx], 17, PurpleLight, FontWeights.Normal);
+            if (idx == 1) icon.FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets");   // значок будильника
             icon.VerticalAlignment = VerticalAlignment.Center;
             var name = T(CatNames[idx], 15, White, FontWeights.SemiBold);
             name.VerticalAlignment = VerticalAlignment.Center;
@@ -383,8 +397,8 @@ namespace DreamIsland
             {
                 CornerRadius = new CornerRadius(12),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = PurpleEdge,
-                Background = Brushes.Transparent,
+                BorderBrush = GlassEdge,
+                Background = GlassFaint,
                 Padding = new Thickness(12, 11, 12, 11),
                 Margin = new Thickness(0, 0, 0, 8),
                 Child = grid,
@@ -408,18 +422,20 @@ namespace DreamIsland
             for (int i = 0; i < _cat.Length; i++)
             {
                 bool sel = i == idx;
-                _cat[i].BorderBrush = sel ? Purple : PurpleEdge;
-                _cat[i].Background = sel ? PurpleFill : Brushes.Transparent;
+                _cat[i].BorderBrush = sel ? PurpleLight : GlassEdge;
+                _cat[i].Background = sel ? CatSelFill : GlassFaint;
+                _cat[i].Effect = sel ? GlowCat : null;
             }
 
             UIElement page;
             switch (idx)
             {
                 case 0: page = PageClock(); break;
-                case 1: page = PageSound(); break;
-                case 2: page = PageComfort(); break;
-                case 3: page = PageServices(); break;
-                case 4: page = PageStats(); break;
+                case 1: page = PageAlarm(); break;
+                case 2: page = PageSound(); break;
+                case 3: page = PageComfort(); break;
+                case 4: page = PageServices(); break;
+                case 5: page = PageStats(); break;
                 default: page = PageSettings(); break;
             }
 
@@ -518,6 +534,7 @@ namespace DreamIsland
             p.Children.Add(Toggle("Запускать вместе с Windows", "autostart"));
             p.Children.Add(Toggle("Точка записи (микрофон / камера)", "priv"));
             p.Children.Add(Toggle("Экономия видеопамяти", "lowgpu", "Вступает в силу после перезапуска"));
+            if (SetIslandGlass != null) p.Children.Add(GlassRow());
 
             p.Children.Add(Section("Обновления"));
             p.Children.Add(Toggle("Автоматически проверять обновления", "autoupdate"));
@@ -546,8 +563,8 @@ namespace DreamIsland
         /// <summary>Подсветка краёв при наведении; keepBright — когда край должен остаться ярким (выбранный элемент).</summary>
         private static void Hover(Border b, Func<bool> keepBright)
         {
-            b.MouseEnter += (s, e) => { b.BorderBrush = Purple; };
-            b.MouseLeave += (s, e) => { b.BorderBrush = keepBright() ? Purple : PurpleEdge; };
+            b.MouseEnter += (s, e) => { b.BorderBrush = GlassEdgeHot; };
+            b.MouseLeave += (s, e) => { b.BorderBrush = keepBright() ? PurpleLight : GlassEdge; };
         }
 
         private static Border RowBox(UIElement child)
@@ -556,8 +573,8 @@ namespace DreamIsland
             {
                 CornerRadius = new CornerRadius(12),
                 BorderThickness = new Thickness(1.1),
-                BorderBrush = PurpleEdge,
-                Background = RowBg,
+                BorderBrush = GlassEdge,
+                Background = GlassFill,
                 Padding = new Thickness(14, 10, 14, 10),
                 Margin = new Thickness(0, 0, 0, 8),
                 Child = child
@@ -571,6 +588,7 @@ namespace DreamIsland
             tb.HorizontalAlignment = HorizontalAlignment.Center;
             tb.VerticalAlignment = VerticalAlignment.Center;
 
+            var press = new ScaleTransform(1, 1);
             var b = new Border
             {
                 CornerRadius = new CornerRadius(10),
@@ -579,20 +597,40 @@ namespace DreamIsland
                 Margin = new Thickness(0, 0, 8, 8),
                 Child = tb,
                 Cursor = Cursors.Hand,
-                Tag = selected
+                Tag = selected,
+                Focusable = true,                      // доступно с клавиатуры: Tab, затем Пробел или Enter
+                FocusVisualStyle = null,
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = press
             };
             PaintChip(b);
-            b.MouseEnter += (s, e) => { b.BorderBrush = Purple; };
-            b.MouseLeave += (s, e) => PaintChip(b);
-            if (onClick != null) b.MouseLeftButtonUp += (s, e) => onClick();
+            b.MouseEnter += (s, e) => { b.BorderBrush = GlassEdgeHot; };
+            b.MouseLeave += (s, e) => { PaintChip(b); press.ScaleX = press.ScaleY = 1; };
+            b.GotKeyboardFocus += (s, e) => { b.BorderBrush = GlassEdgeHot; };
+            b.LostKeyboardFocus += (s, e) => PaintChip(b);
+            b.MouseLeftButtonDown += (s, e) => { press.ScaleX = press.ScaleY = 0.97; };   // нажатие: чуть «вдавливается»
+            b.MouseLeftButtonUp += (s, e) =>
+            {
+                press.ScaleX = press.ScaleY = 1;
+                if (onClick != null) onClick();
+            };
+            b.KeyDown += (s, e) =>
+            {
+                if ((e.Key == Key.Space || e.Key == Key.Enter) && onClick != null)
+                {
+                    onClick();
+                    e.Handled = true;
+                }
+            };
             return b;
         }
 
         private static void PaintChip(Border b)
         {
             bool sel = b.Tag is bool && (bool)b.Tag;
-            b.BorderBrush = sel ? Purple : PurpleEdge;
-            b.Background = sel ? PurpleDeep : PurpleFill;
+            b.BorderBrush = sel ? PurpleLight : GlassEdge;
+            b.Background = sel ? ChipSelFill : GlassFill;
+            b.Effect = sel ? GlowChip : null;
         }
 
         private static WrapPanel Chips(params UIElement[] items)
@@ -655,8 +693,9 @@ namespace DreamIsland
                 Height = 22,
                 CornerRadius = new CornerRadius(11),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = on ? Purple : PurpleEdge,
-                Background = on ? PurpleDeep : Black,
+                BorderBrush = on ? PurpleLight : GlassEdge,
+                Background = on ? ToggleOn : Black,
+                Effect = on ? GlowChip : null,
                 Child = knob,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(12, 0, 0, 0)
@@ -674,8 +713,8 @@ namespace DreamIsland
             else
             {
                 row.Cursor = Cursors.Hand;
-                row.MouseEnter += (s, e) => { row.BorderBrush = Purple; };
-                row.MouseLeave += (s, e) => { row.BorderBrush = PurpleEdge; };
+                row.MouseEnter += (s, e) => { row.BorderBrush = GlassEdgeHot; };
+                row.MouseLeave += (s, e) => { row.BorderBrush = GlassEdge; };
                 row.MouseLeftButtonUp += (s, e) =>
                 {
                     if (!mi.IsEnabled) return;
@@ -683,8 +722,7 @@ namespace DreamIsland
                     _raise(mi);
 
                     bool v = mi.IsChecked;   // обработчик мог вернуть значение обратно (например, при ошибке автозапуска)
-                    track.BorderBrush = v ? Purple : PurpleEdge;
-                    track.Background = v ? PurpleDeep : Black;
+                    PaintTrack(track, v);
                     move.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(v ? 20 : 0, TimeSpan.FromMilliseconds(130)));
                 };
             }
@@ -1124,8 +1162,9 @@ namespace DreamIsland
                 Height = 22,
                 CornerRadius = new CornerRadius(11),
                 BorderThickness = new Thickness(1.2),
-                BorderBrush = on ? Purple : PurpleEdge,
-                Background = on ? PurpleDeep : Black,
+                BorderBrush = on ? PurpleLight : GlassEdge,
+                Background = on ? ToggleOn : Black,
+                Effect = on ? GlowChip : null,
                 Child = knob,
                 Margin = new Thickness(12, 0, 0, 0),
                 Cursor = Cursors.Hand
@@ -1133,8 +1172,7 @@ namespace DreamIsland
             track.MouseLeftButtonUp += (s, e) =>
             {
                 on = !on;
-                track.BorderBrush = on ? Purple : PurpleEdge;
-                track.Background = on ? PurpleDeep : Black;
+                PaintTrack(track, on);
                 move.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(on ? 20 : 0, TimeSpan.FromMilliseconds(130)));
                 changed(on);
                 e.Handled = true;

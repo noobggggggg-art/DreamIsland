@@ -98,12 +98,23 @@ namespace DreamIsland
         private TimeSpan _tTotal;          // длина фазы (таймер, помодоро)
         private bool _pomWork = true;
         private string _timerText = "";
+        private string _tLabel = "";         // своя подпись таймера
         private const double TimerExtra = 56; // на сколько шире остров, пока идёт таймер и играет музыка
         private readonly DispatcherTimer _timerTick = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Luminous: тонкая кромка со светом сверху-слева, остров остаётся чёрным
+            Island.BorderThickness = new Thickness(1);
+            Island.BorderBrush = new LinearGradientBrush(
+                new GradientStopCollection
+                {
+                    new GradientStop(Color.FromArgb(0x5A, 255, 255, 255), 0),
+                    new GradientStop(Color.FromArgb(0x10, 255, 255, 255), 0.5),
+                    new GradientStop(Color.FromArgb(0x2A, 0xA7, 0x8B, 0xFA), 1)
+                }, new Point(0, 0), new Point(1, 1));
 
             Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
             Top = 6;
@@ -198,7 +209,7 @@ namespace DreamIsland
             {
                 string label = _tk == TimerKind.Stopwatch ? "Секундомер"
                              : _tk == TimerKind.Pomodoro ? (_pomWork ? "Фокус" : "Перерыв")
-                             : "Таймер";
+                             : (string.IsNullOrEmpty(_tLabel) ? "Таймер" : _tLabel);
                 if (!_tRunning) label += " (пауза)";
 
                 DateText.Text = _state == IslandState.IdleHover ? label + " · " + _timerText : _timerText;
@@ -864,9 +875,10 @@ namespace DreamIsland
             return _tBefore + (_tRunning ? DateTime.UtcNow - _tStart : TimeSpan.Zero);
         }
 
-        private void StartTimer(TimerKind kind, TimeSpan total)
+        private void StartTimer(TimerKind kind, TimeSpan total, string label = null)
         {
             _tk = kind;
+            _tLabel = label ?? "";
             _tTotal = total;
             _tBefore = TimeSpan.Zero;
             _tStart = DateTime.UtcNow;
@@ -882,6 +894,7 @@ namespace DreamIsland
         private void StopTimer()
         {
             _timerTick.Stop();
+            _tLabel = "";
             _tk = TimerKind.None;
             _tRunning = false;
             _timerText = "";
@@ -971,8 +984,9 @@ namespace DreamIsland
                 return;
             }
 
-            ShowToast("\uE121", false, Green, "Таймер", "Готово", Green, -1, 4000);
+            string doneLabel = string.IsNullOrEmpty(_tLabel) ? "Таймер" : _tLabel;
             StopTimer();
+            StartRing(doneLabel, "Готово", AppSettings.GetInt("timer_sound", 0));
         }
 
         private void Timer_Click(object sender, RoutedEventArgs e)
@@ -1089,6 +1103,7 @@ namespace DreamIsland
         {
             // клик по кнопкам и полосе прогресса обрабатывается ими самими,
             // клик по любому другому месту острова = пауза / плей
+            if (_ringing) { OnRingClick(); return; }   // звонит будильник или таймер: клик отложит или выключит
             if (_state == IslandState.Clip) return; // в списке буфера клики обрабатывают строки
             if (IsInside(e.OriginalSource as DependencyObject, Controls)) return;
             if (_hasMedia) _media.TogglePlayPause();

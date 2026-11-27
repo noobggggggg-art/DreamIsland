@@ -42,6 +42,7 @@ A "Dynamic Island" for Windows 10/11, inspired by the iPhone: a small black caps
 
 **Tools**
 - timer, stopwatch, pomodoro (25/5);
+- **alarms** at a time of day (repeat days, label, sound, snooze by clicking the island) and a **custom timer** (h / m / s) — the "Будильник" tab of the settings window;
 - clipboard history: copy something, hover the island within 8 seconds to see the last 5 items, click one to paste it;
 - start with Windows;
 - automatic updates from GitHub.
@@ -78,8 +79,8 @@ The update source is built into the program and cannot be changed in the setting
 
 To publish a new version:
 ```
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 ## VPN (DreamVPN only)

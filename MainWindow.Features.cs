@@ -89,6 +89,8 @@ namespace DreamIsland
             firstCheck.Start();
 
             InitGames();
+            InitAlarms();
+            InitGlass();
             Apply();
         }
 
@@ -107,6 +109,8 @@ namespace DreamIsland
             DisposeVideo();
             DisposeDownloads();
             DisposeVol();
+            DisposeAlarms();
+            _glassTick.Stop();
         }
 
         private void FeatureToggle_Click(object sender, RoutedEventArgs e)

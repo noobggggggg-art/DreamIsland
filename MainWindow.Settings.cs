@@ -39,6 +39,10 @@ namespace DreamIsland
                 RunningApps = GetRunningApps,
                 BreakMinutes = () => _breakMinutes,
                 SetBreakMinutes = SetBreakMinutes,
+                StartCountdown = StartCustomTimer,
+                AlarmsChanged = OnAlarmsChanged,
+                IslandGlass = () => _glassOn,
+                SetIslandGlass = SetIslandGlass,
                 ExitRequested = () => { var exit = FindMenuDeep("exit"); if (exit != null) exit.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, exit)); }
             };
             _settings.Closed += (s, e) => _settings = null;

@@ -59,8 +59,12 @@ namespace DreamIsland
 
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(210, 0, 0, 0)),
-                CornerRadius = new CornerRadius(8),
+                Background = new LinearGradientBrush(Color.FromArgb(0xE0, 0x16, 0x0F, 0x2C), Color.FromArgb(0xE6, 0x06, 0x06, 0x0C), 70),
+                BorderThickness = new Thickness(1.1),
+                BorderBrush = new LinearGradientBrush(Color.FromArgb(0x55, 255, 255, 255), Color.FromArgb(0x26, 0x8B, 0x5C, 0xF6), 45),
+                CornerRadius = new CornerRadius(10),
+                Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0x7C, 0x3A, 0xED), BlurRadius = 18, ShadowDepth = 0, Opacity = 0.35 },
+                Margin = new Thickness(14),
                 Child = stack,
                 Cursor = Cursors.Hand
             };
